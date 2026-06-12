@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cheetah & Talitha — Cerita Kita</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Jost:wght@200;300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --ink:       #1a0a0f;
+      --rose:      #c0626a;
+      --blush:     #e8b4b8;
+      --cream:     #f9f2ee;
+      --parchment: #efe4dc;
+      --gold:      #b89060;
+      --mist:      #6b5057;
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      background: var(--ink);
+      color: var(--cream);
+      font-family: 'Jost', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── CURSOR ── */
+    #c-dot, #c-ring {
+      position: fixed; top: 0; left: 0;
+      border-radius: 50%; pointer-events: none;
+      transform: translate(-50%,-50%); z-index: 9999;
+    }
+    #c-dot  { width:7px; height:7px; background: var(--blush); transition: transform .15s; }
+    #c-ring { width:36px; height:36px; border: 1px solid rgba(232,180,184,.5);
+              transition: width .25s, height .25s, border-color .25s; }
+    body.hov #c-ring { width:52px; height:52px; border-color: var(--blush); }
+
+    /* ── LOADING SCREEN ── */
+    #loader {
+      position: fixed; inset: 0; background: var(--ink);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9000; transition: opacity .8s .2s;
+    }
+    #loader.fade { opacity: 0; pointer-events: none; }
+    .loader-inner { text-align: center; }
+    .loader-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 6vw, 4.5rem);
+      font-weight: 300; letter-spacing: .15em;
+      color: var(--blush); opacity: 0;
+      animation: fadeUp .8s .4s forwards;
+    }
+    .loader-line {
+      width: 0; height: 1px; background: var(--rose);
+      margin: 1rem auto; animation: grow 1s 1s forwards;
+    }
+    .loader-sub {
+      font-size: .75rem; letter-spacing: .25em; text-transform: uppercase;
+      color: var(--mist); opacity: 0; animation: fadeUp .6s 1.4s forwards;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes grow { to { width: 160px; } }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 800;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.5rem 3rem;
+      background: linear-gradient(to bottom, rgba(26,10,15,.9), transparent);
+      transition: background .4s;
+    }
+    nav.scrolled { background: rgba(26,10,15,.95); padding: 1rem 3rem; }
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem; letter-spacing: .2em;
+      color: var(--blush); text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      font-size: .7rem; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--mist); text-decoration: none; transition: color .3s;
+    }
+    .nav-links a:hover { color: var(--blush); }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+      background: radial-gradient(ellipse 80% 60% at 50% 80%, #2d0e18 0%, var(--ink) 70%);
+    }
+    .petals-bg {
+      position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+    }
+    .petal {
+      position: absolute; border-radius: 50% 0 50% 0;
+      background: rgba(192,98,106,.12);
+      animation: drift linear infinite;
+    }
+    @keyframes drift {
+      0%   { transform: translateY(-40px) rotate(0deg); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: .6; }
+      100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+    }
+    .hero-content { text-align: center; position: relative; z-index: 2; padding: 0 2rem; }
+    .hero-eyebrow {
+      font-size: .65rem; letter-spacing: .4em; text-transform: uppercase;
+      color: var(--rose); margin-bottom: 1.5rem;
+      opacity: 0; animation: fadeUp .7s .3s forwards;
+    }
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3rem, 10vw, 8rem);
+      font-weight: 300; line-height: 1.05;
+      color: var(--cream); margin-bottom: .5rem;
+      opacity: 0; animation: fadeUp .9s .5s forwards;
+    }
+    .hero-title em { color: var(--blush); font-style: italic; }
+    .hero-ampersand {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 6vw, 5rem);
+      font-weight: 300; color: var(--rose);
+      display: block; letter-spacing: .1em;
+      opacity: 0; animation: fadeUp .7s .7s forwards;
+    }
+    .hero-divider {
+      width: 60px; height: 1px; background: var(--rose);
+      margin: 2rem auto; opacity: 0; animation: fadeUp .6s .9s forwards;
+    }
+    .hero-sub {
+      font-size: clamp(.85rem, 2vw, 1rem);
+      color: var(--mist); letter-spacing: .1em;
+      opacity: 0; animation: fadeUp .6s 1.1s forwards;
+    }
+    .scroll-hint {
+      position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: .5rem;
+      opacity: 0; animation: fadeUp .6s 1.8s forwards;
+    }
+    .scroll-hint span { font-size: .6rem; letter-spacing: .3em; text-transform: uppercase; color: var(--mist); }
+    .scroll-line { width: 1px; height: 50px; background: var(--rose); animation: scrollPulse 2s infinite; }
+    @keyframes scrollPulse {
+      0%,100% { transform: scaleY(1); opacity: .6; }
+      50%      { transform: scaleY(.4); opacity: 1; }
+    }
+
+    /* ── SECTIONS COMMON ── */
+    section { padding: clamp(4rem, 10vw, 8rem) clamp(1.5rem, 6vw, 6rem); }
+    .section-eyebrow {
+      font-size: .65rem; letter-spacing: .35em; text-transform: uppercase;
+      color: var(--rose); margin-bottom: 1rem;
+    }
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 300; line-height: 1.2;
+      color: var(--cream); margin-bottom: 1.5rem;
+    }
+    .section-title em { color: var(--blush); font-style: italic; }
+    .section-body { color: var(--mist); line-height: 1.9; font-size: .95rem; max-width: 520px; }
+
+    /* ── REVEAL ANIMATION ── */
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity .8s, transform .8s; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* ── LOVE LETTER SECTION ── */
+    #letter {
+      background: var(--parchment);
+      color: var(--ink);
+      position: relative; overflow: hidden;
+    }
+    #letter::before {
+      content: '❧';
+      position: absolute; top: 3rem; right: 4rem;
+      font-size: 8rem; color: rgba(192,98,106,.08);
+      font-family: 'Cormorant Garamond', serif;
+    }
+    .letter-card {
+      max-width: 640px; margin: 0 auto;
+      background: #fff;
+      padding: clamp(2rem, 6vw, 4rem);
+      border-left: 3px solid var(--rose);
+      position: relative;
+    }
+    .letter-card::after {
+      content: '';
+      position: absolute; inset: 8px; border: 1px solid rgba(192,98,106,.12);
+      pointer-events: none;
+    }
+    .letter-date {
+      font-size: .7rem; letter-spacing: .25em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 1.5rem;
+    }
+    .letter-greeting {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 400; color: var(--ink);
+      margin-bottom: 1.2rem; font-style: italic;
+    }
+    .letter-body {
+      color: #4a3035; line-height: 2; font-size: .95rem;
+      font-family: 'Jost', sans-serif; font-weight: 300;
+    }
+    .letter-body p + p { margin-top: 1.2rem; }
+    .letter-sign {
+      margin-top: 2rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem; font-style: italic;
+      color: var(--rose);
+    }
+
+    /* ── TIMELINE ── */
+    #timeline { background: var(--ink); position: relative; }
+    .timeline-track {
+      position: relative; max-width: 860px; margin: 3rem auto 0;
+    }
+    .timeline-track::before {
+      content: '';
+      position: absolute; left: 50%; top: 0; bottom: 0;
+      width: 1px; background: rgba(192,98,106,.25);
+      transform: translateX(-50%);
+    }
+    .t-item {
+      display: grid; grid-template-columns: 1fr 60px 1fr;
+      align-items: start; margin-bottom: 3.5rem; gap: 0;
+    }
+    .t-item:nth-child(even) .t-left  { order: 3; text-align: left; padding-left: 2rem; padding-right: 0; }
+    .t-item:nth-child(even) .t-dot   { order: 2; }
+    .t-item:nth-child(even) .t-right { order: 1; text-align: right; padding-right: 2rem; padding-left: 0; }
+    .t-left  { text-align: right; padding-right: 2rem; }
+    .t-right { text-align: left;  padding-left: 2rem; }
+    .t-dot {
+      display: flex; align-items: flex-start; justify-content: center;
+      padding-top: .25rem;
+    }
+    .t-dot-inner {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid var(--rose);
+      background: var(--ink); position: relative;
+      flex-shrink: 0;
+    }
+    .t-dot-inner::after {
+      content: ''; position: absolute; inset: 3px;
+      border-radius: 50%; background: var(--rose);
+    }
+    .t-date {
+      font-size: .65rem; letter-spacing: .3em; text-transform: uppercase;
+      color: var(--rose); margin-bottom: .4rem;
+    }
+    .t-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem; font-weight: 400;
+      color: var(--cream); margin-bottom: .5rem;
+    }
+    .t-desc { font-size: .85rem; color: var(--mist); line-height: 1.8; }
+
+    /* ── GALLERY ── */
+    #gallery { background: #130509; }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: auto;
+      gap: 1rem; margin-top: 3rem;
+    }
+    .g-card {
+      background: #1e0c12; border: 1px solid rgba(192,98,106,.15);
+      overflow: hidden; position: relative;
+      display: flex; align-items: center; justify-content: center;
+      cursor: none; transition: border-color .4s;
+    }
+    .g-card:hover { border-color: var(--rose); }
+    .g-card:hover .g-overlay { opacity: 1; }
+    .g-placeholder {
+      width: 100%; height: 100%;
+      background: linear-gradient(135deg, #2a0d14 0%, #1a0a0f 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: .5rem; padding: 1.5rem;
+    }
+    .g-icon { font-size: 2rem; opacity: .3; }
+    .g-label {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem; font-style: italic;
+      color: rgba(232,180,184,.4); text-align: center;
+    }
+    .g-overlay {
+      position: absolute; inset: 0;
+      background: rgba(192,98,106,.07);
+      opacity: 0; transition: opacity .4s;
+    }
+    .g1  { grid-column: 1/8;  aspect-ratio: 4/3; }
+    .g2  { grid-column: 8/13; aspect-ratio: 3/4; grid-row: 1/3; }
+    .g3  { grid-column: 1/5;  aspect-ratio: 1; }
+    .g4  { grid-column: 5/8;  aspect-ratio: 1; }
+    .g-quote-block {
+      grid-column: 1/8; padding: 2.5rem;
+      background: transparent; border: 1px solid rgba(192,98,106,.15);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .g-quote {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1rem, 2.5vw, 1.5rem);
+      font-style: italic; color: var(--blush);
+      text-align: center; line-height: 1.7;
+    }
+    .g5  { grid-column: 8/13; aspect-ratio: 4/3; }
+
+    /* ── POEM ── */
+    #poem {
+      background: #0d0407;
+      text-align: center;
+    }
+    .poem-content { max-width: 500px; margin: 2.5rem auto 0; }
+    .poem-line {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1rem, 2.5vw, 1.3rem);
+      font-weight: 300; line-height: 2.2;
+      color: var(--cream); display: block;
+    }
+    .poem-line em { color: var(--blush); font-style: italic; }
+    .poem-line.pause { margin-top: 1rem; }
+
+    /* ── PROMISE ── */
+    #promise {
+      background: var(--rose);
+      text-align: center;
+    }
+    #promise .section-title { color: #fff; }
+    #promise .section-title em { color: var(--parchment); }
+    #promise .section-body { color: rgba(255,255,255,.8); margin: 0 auto; text-align: center; }
+    .promise-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem; margin-top: 3rem; max-width: 900px; margin-left: auto; margin-right: auto;
+    }
+    .promise-item { padding: 2rem; border: 1px solid rgba(255,255,255,.2); }
+    .promise-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3rem; font-weight: 300;
+      color: rgba(255,255,255,.2); display: block; margin-bottom: .5rem;
+    }
+    .promise-text {
+      font-size: .9rem; color: rgba(255,255,255,.85);
+      line-height: 1.8;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink);
+      padding: 4rem 3rem; text-align: center;
+      border-top: 1px solid rgba(192,98,106,.15);
+    }
+    .footer-names {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.5rem, 5vw, 3.5rem);
+      font-weight: 300; letter-spacing: .1em;
+      color: var(--blush); margin-bottom: .5rem;
+    }
+    .footer-sub { font-size: .7rem; letter-spacing: .3em; text-transform: uppercase; color: var(--mist); }
+    .heart-beat {
+      display: inline-block; color: var(--rose);
+      animation: beat 1.4s ease-in-out infinite;
+      margin: 1.5rem 0; font-size: 1.5rem;
+    }
+    @keyframes beat {
+      0%,100% { transform: scale(1); }
+      14%      { transform: scale(1.3); }
+      28%      { transform: scale(1); }
+      42%      { transform: scale(1.2); }
+      56%      { transform: scale(1); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 1.2rem 1.5rem; }
+      .nav-links { gap: 1.5rem; }
+      .timeline-track::before { left: 24px; transform: none; }
+      .t-item { grid-template-columns: 48px 1fr; grid-template-rows: auto auto; }
+      .t-item .t-left, .t-item:nth-child(even) .t-left   { order: 2; text-align: left; padding: 0 0 0 1.2rem; grid-column: 2; }
+      .t-item .t-dot,  .t-item:nth-child(even) .t-dot    { order: 1; grid-row: 1; grid-column: 1; }
+      .t-item .t-right,.t-item:nth-child(even) .t-right  { display: none; }
+      .g1  { grid-column: 1/13; }
+      .g2  { grid-column: 1/13; grid-row: auto; }
+      .g3  { grid-column: 1/7; }
+      .g4  { grid-column: 7/13; }
+      .g-quote-block { grid-column: 1/13; }
+      .g5  { grid-column: 1/13; }
+    }
+    @media (max-width: 480px) {
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Custom Cursor -->
+  <div id="c-dot"></div>
+  <div id="c-ring"></div>
+
+  <!-- Loading Screen -->
+  <div id="loader">
+    <div class="loader-inner">
+      <div class="loader-name">Talitha &amp; Cheetah</div>
+      <div class="loader-line"></div>
+      <div class="loader-sub">Cerita kita yang tak tergantikan</div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav id="main-nav">
+    <a class="nav-logo" href="#hero">T &amp; C</a>
+    <ul class="nav-links">
+      <li><a href="#letter">Surat</a></li>
+      <li><a href="#timeline">Kenangan</a></li>
+      <li><a href="#gallery">Galeri</a></li>
+      <li><a href="#poem">Puisi</a></li>
+      <li><a href="#promise">Janji</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero -->
+  <section id="hero">
+    <div class="petals-bg" id="petals"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">Sebuah persembahan untukmu</p>
+      <h1 class="hero-title">
+        <em>Talitha</em>
+        <span class="hero-ampersand">&amp;</span>
+        Cheetah
+      </h1>
+      <div class="hero-divider"></div>
+      <p class="hero-sub">Talitha Salsabila Maulidiyahn — kamu adalah rumah terindah yang pernah kutemukan</p>
+    </div>
+    <div class="scroll-hint">
+      <div class="scroll-line"></div>
+      <span>Scroll</span>
+    </div>
+  </section>
+
+  <!-- Love Letter -->
+  <section id="letter">
+    <div class="reveal" style="max-width: 640px; margin: 0 auto;">
+      <p class="section-eyebrow">Dari hatiku</p>
+      <h2 class="section-title" style="color: var(--ink);">Surat <em>Cinta</em></h2>
+    </div>
+    <div class="letter-card reveal" style="margin-top: 2.5rem;">
+      <p class="letter-date">Juni 2026</p>
+      <p class="letter-greeting">Kepada Talitha yang aku cintai,</p>
+      <div class="letter-body">
+        <p>
+          Ada banyak kata di dunia ini, tapi tak satupun yang cukup
+          untuk menggambarkan betapa bersyukurnya aku setiap kali melihatmu tersenyum.
+          Kamu bukan hanya bagian dari hariku — kamu adalah alasan hari itu terasa berarti.
+        </p>
+        <p>
+          Di setiap momen biasa yang kita lalui bersama, aku selalu menemukan
+          keindahan yang luar biasa. Dalam diammu, dalam tawamu, dalam tatapanmu —
+          aku menemukan ketenangan yang belum pernah kurasakan sebelumnya.
+        </p>
+        <p>
+          Talitha Salsabila Maulidiyahn, nama indah itu kini selalu menari
+          di dalam pikiranku. Terima kasih sudah menjadi kamu,
+          dan terima kasih sudah memilih untuk bersamaku.
+        </p>
+        <p>
+          Dengan seluruh cintaku yang tulus,
+        </p>
+      </div>
+      <div class="letter-sign">Cheetah Amrullah Swastika ♡</div>
+    </div>
+  </section>
+
+  <!-- Timeline -->
+  <section id="timeline">
+    <div class="reveal" style="text-align: center;">
+      <p class="section-eyebrow">Perjalanan kita</p>
+      <h2 class="section-title" style="text-align:center;">Kenangan <em>Bersama</em></h2>
+    </div>
+    <div class="timeline-track">
+
+      <div class="t-item reveal">
+        <div class="t-left">
+          <p class="t-date">Awal Mula</p>
+          <h3 class="t-title">Pertama Kali Bertemu</h3>
+          <p class="t-desc">Saat pertama kali melihatmu, sesuatu dalam diriku berbisik bahwa inilah momen yang akan selalu kuingat.</p>
+        </div>
+        <div class="t-dot"><div class="t-dot-inner"></div></div>
+        <div class="t-right"></div>
+      </div>
+
+      <div class="t-item reveal">
+        <div class="t-left"></div>
+        <div class="t-dot"><div class="t-dot-inner"></div></div>
+        <div class="t-right">
+          <p class="t-date">Momen Spesial</p>
+          <h3 class="t-title">Ketika Kamu Tersenyum</h3>
+          <p class="t-desc">Ada satu senyum darimu yang membuatku sadar — aku benar-benar jatuh cinta padamu.</p>
+        </div>
+      </div>
+
+      <div class="t-item reveal">
+        <div class="t-left">
+          <p class="t-date">Hari Istimewa</p>
+          <h3 class="t-title">Kita Resmi Bersama</h3>
+          <p class="t-desc">Hari terbaik dalam hidupku. Kamu mengiyakan, dan duniaku menjadi jauh lebih berwarna.</p>
+        </div>
+        <div class="t-dot"><div class="t-dot-inner"></div></div>
+        <div class="t-right"></div>
+      </div>
+
+      <div class="t-item reveal">
+        <div class="t-left"></div>
+        <div class="t-dot"><div class="t-dot-inner"></div></div>
+        <div class="t-right">
+          <p class="t-date">Setiap Hari</p>
+          <h3 class="t-title">Petualangan Kita</h3>
+          <p class="t-desc">Dari hal-hal kecil hingga momen besar — setiap detik bersamamu adalah petualangan yang tak terlupakan.</p>
+        </div>
+      </div>
+
+      <div class="t-item reveal">
+        <div class="t-left">
+          <p class="t-date">Hari Ini &amp; Seterusnya</p>
+          <h3 class="t-title">Masa Depan Kita</h3>
+          <p class="t-desc">Masih banyak cerita yang akan kita tulis bersama. Dan aku tak sabar untuk mengalami semuanya denganmu.</p>
+        </div>
+        <div class="t-dot"><div class="t-dot-inner"></div></div>
+        <div class="t-right"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section id="gallery">
+    <div class="reveal" style="text-align:center;">
+      <p class="section-eyebrow">Koleksi momen</p>
+      <h2 class="section-title" style="text-align:center;">Galeri <em>Foto Kita</em></h2>
+      <p class="section-body" style="margin: 0 auto; text-align:center; color: var(--mist);">
+        Tambahkan foto-foto indah kalian di sini — setiap gambar adalah kenangan yang abadi.
+      </p>
+    </div>
+    <div class="gallery-grid reveal" style="margin-top:3rem;">
+      <div class="g-card g1">
+        <div class="g-placeholder">
+          <div class="g-icon">🌸</div>
+          <div class="g-label">Foto Favorit Bersama</div>
+        </div>
+        <div class="g-overlay"></div>
+      </div>
+      <div class="g-card g2">
+        <div class="g-placeholder">
+          <div class="g-icon">💕</div>
+          <div class="g-label">Potret Talitha</div>
+        </div>
+        <div class="g-overlay"></div>
+      </div>
+      <div class="g-card g3">
+        <div class="g-placeholder">
+          <div class="g-icon">🌙</div>
+          <div class="g-label">Malam Bersama</div>
+        </div>
+        <div class="g-overlay"></div>
+      </div>
+      <div class="g-card g4">
+        <div class="g-placeholder">
+          <div class="g-icon">☀️</div>
+          <div class="g-label">Hari Bahagia</div>
+        </div>
+        <div class="g-overlay"></div>
+      </div>
+      <div class="g-quote-block reveal">
+        <blockquote class="g-quote">
+          "Di matamu, aku menemukan seluruh semesta yang pernah kuimpikan."
+        </blockquote>
+      </div>
+      <div class="g-card g5">
+        <div class="g-placeholder">
+          <div class="g-icon">🌹</div>
+          <div class="g-label">Kenangan Indah</div>
+        </div>
+        <div class="g-overlay"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Poem -->
+  <section id="poem">
+    <div class="reveal" style="text-align:center;">
+      <p class="section-eyebrow">Untukmu</p>
+      <h2 class="section-title" style="text-align:center;">Puisi <em>Cinta</em></h2>
+    </div>
+    <div class="poem-content reveal">
+      <span class="poem-line">Dalam setiap napas yang kuhirup</span>
+      <span class="poem-line">Ada namamu yang terselip diam-diam,</span>
+      <span class="poem-line">Talitha — <em>seperti cahaya pagi</em></span>
+      <span class="poem-line">Yang menerangi hari-hariku yang gelap.</span>
+      <span class="poem-line pause"></span>
+      <span class="poem-line">Kamu bukan sekadar cinta,</span>
+      <span class="poem-line">Kamu adalah <em>alasanku berjuang,</em></span>
+      <span class="poem-line">Rumah yang selalu kurindukan</span>
+      <span class="poem-line">Di ujung setiap perjalanan panjang.</span>
+      <span class="poem-line pause"></span>
+      <span class="poem-line">Dan aku, Cheetah yang selalu untukmu,</span>
+      <span class="poem-line">Berjanji untuk terus <em>mencintaimu</em></span>
+      <span class="poem-line">Dengan cara yang paling tulus</span>
+      <span class="poem-line">Hingga waktu tak lagi bisa menghitung.</span>
+    </div>
+  </section>
+
+  <!-- Promise -->
+  <section id="promise">
+    <div class="reveal">
+      <p class="section-eyebrow" style="color: rgba(255,255,255,.7);">Dari Cheetah untuk Talitha</p>
+      <h2 class="section-title">Janji-Janji <em>Terindah</em></h2>
+      <p class="section-body">Ini bukan sekadar kata-kata. Ini adalah komitmenku untuk kamu, selamanya.</p>
+    </div>
+    <div class="promise-items reveal">
+      <div class="promise-item">
+        <span class="promise-num">I</span>
+        <p class="promise-text">Aku berjanji untuk selalu ada untukmu — di saat suka maupun duka.</p>
+      </div>
+      <div class="promise-item">
+        <span class="promise-num">II</span>
+        <p class="promise-text">Aku berjanji untuk mencintaimu apa adanya, dengan segala kelebihan dan kekuranganmu.</p>
+      </div>
+      <div class="promise-item">
+        <span class="promise-num">III</span>
+        <p class="promise-text">Aku berjanji untuk terus tumbuh bersamamu dan menjadi versi terbaik diriku untukmu.</p>
+      </div>
+      <div class="promise-item">
+        <span class="promise-num">IV</span>
+        <p class="promise-text">Aku berjanji bahwa namamu akan selalu menjadi doa tulus di setiap malamku.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="heart-beat">♥</div>
+    <div class="footer-names">Talitha &amp; Cheetah</div>
+    <p class="footer-sub" style="margin-top:.5rem;">Selamanya &amp; seterusnya — Juni 2026</p>
+    <p style="margin-top:2rem; font-size:.7rem; color: rgba(107,80,87,.5); letter-spacing:.15em;">
+      Dibuat dengan cinta yang tulus ✦ Cheetah Amrullah Swastika
+    </p>
+  </footer>
+
+  <script>
+    // Cursor
+    const dot = document.getElementById('c-dot');
+    const ring = document.getElementById('c-ring');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+    (function animCursor() {
+      rx += (mx - rx) * .12; ry += (my - ry) * .12;
+      dot.style.left  = mx + 'px'; dot.style.top  = my + 'px';
+      ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+      requestAnimationFrame(animCursor);
+    })();
+    document.querySelectorAll('a, button, .g-card, .t-dot-inner').forEach(el => {
+      el.addEventListener('mouseenter', () => document.body.classList.add('hov'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('hov'));
+    });
+
+    // Loader
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loader').classList.add('fade');
+        setTimeout(() => document.getElementById('loader').remove(), 1200);
+      }, 1800);
+    });
+
+    // Petals
+    const petalsBg = document.getElementById('petals');
+    for (let i = 0; i < 22; i++) {
+      const p = document.createElement('div');
+      p.className = 'petal';
+      const s = 6 + Math.random() * 14;
+      p.style.cssText = `
+        width:${s}px; height:${s*1.4}px;
+        left:${Math.random()*100}%;
+        animation-duration:${10+Math.random()*18}s;
+        animation-delay:-${Math.random()*18}s;
+        opacity:${.3+Math.random()*.5};
+      `;
+      petalsBg.appendChild(p);
+    }
+
+    // Scroll nav
+    const nav = document.getElementById('main-nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 80);
+    });
+
+    // Reveal on scroll
+    const reveals = document.querySelectorAll('.reveal');
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('visible'), i * 80);
+          obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    reveals.forEach(r => obs.observe(r));
+
+    // Counter for days together
+    // (placeholder — update the date below to actual start date)z
+    const startDate = new Date('2024-01-01');
+    const days = Math.floor((Date.now() - startDate) / 86400000);
+    const footerSub = document.querySelector('.footer-sub');
+    if (days > 0) footerSub.textContent += `  ·  ${days} hari bersama ♡`;
+  </script>
+</body>
+</html>
