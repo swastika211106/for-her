@@ -53,6 +53,9 @@
       font-weight: 300;
       overflow-x: hidden;
       cursor: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     ::selection {
@@ -1466,7 +1469,9 @@
       }
 
       .t-item .t-left,
-      .t-item:nth-child(even) .t-left {
+      .t-item:nth-child(even) .t-left,
+      .t-item .t-right,
+      .t-item:nth-child(even) .t-right {
         order: 2;
         text-align: left;
         padding: 0 0 0 1.2rem;
@@ -1480,8 +1485,8 @@
         grid-column: 1;
       }
 
-      .t-item .t-right,
-      .t-item:nth-child(even) .t-right {
+      .t-item .t-left:empty,
+      .t-item .t-right:empty {
         display: none;
       }
     }
@@ -2226,10 +2231,10 @@
     reveals.forEach(r => obs.observe(r));
 
     // Counter for days together
-    const startDate = new Date('2024-01-01');
+    const startDate = new Date('2022-05-10');
     const days = Math.floor((Date.now() - startDate) / 86400000);
     const footerSub = document.querySelector('.footer-sub');
-    if (days > 0) footerSub.textContent += `  ·  ${days} days together ♡`;
+    if (days > 0) footerSub.textContent += `  ·  It's been 1494  ${days} days together ♡`;
   </script>
   <script>
     // Lazy-load photos using IntersectionObserver for better mobile performance
@@ -2256,7 +2261,7 @@
       if (extIndex >= extensions.length) return; // All extensions failed
 
       const photoPath = `foto/${photoNum}${extensions[extIndex]}`;
-      
+
       // Directly assign to the DOM image to prevent GC issues on Safari mobile
       img.onload = () => {
         // Image loaded successfully
