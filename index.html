@@ -2232,40 +2232,64 @@
     if (days > 0) footerSub.textContent += `  ·  ${days} days together ♡`;
   </script>
   <script>
-    // Auto-load photos
+    // Lazy-load photos using IntersectionObserver for better mobile performance
     const images = document.querySelectorAll('.img-wrapper img, .g-card img, .m-card img, .bg-card-img');
-
     const extensions = ['.jpg', '.png', '.jpeg', '.webp'];
-
     let autoCounter = 1;
+
+    // First pass: assign data-num and prepare the image element
     images.forEach((img) => {
       let photoNum = img.getAttribute('data-num');
       if (!photoNum) {
         photoNum = autoCounter;
         autoCounter++;
+        img.setAttribute('data-num', photoNum); // Save it for later
       }
-      let extIndex = 0;
-
-      function tryNextExtension() {
-        if (extIndex >= extensions.length) return;
-
-        const photoPath = `foto/${photoNum}${extensions[extIndex]}`;
-        const tempImg = new Image();
-
-        tempImg.onload = function () {
-          img.src = photoPath;
-        };
-
-        tempImg.onerror = function () {
-          extIndex++;
-          tryNextExtension();
-        };
-
-        tempImg.src = photoPath;
-      }
-
-      tryNextExtension();
+      // Initialize extIndex
+      img.setAttribute('data-ext-index', '0');
     });
+
+    const loadPhoto = (img) => {
+      const photoNum = img.getAttribute('data-num');
+      let extIndex = parseInt(img.getAttribute('data-ext-index'));
+
+      if (extIndex >= extensions.length) return; // All extensions failed
+
+      const photoPath = `foto/${photoNum}${extensions[extIndex]}`;
+      
+      // Directly assign to the DOM image to prevent GC issues on Safari mobile
+      img.onload = () => {
+        // Image loaded successfully
+        img.onload = null;
+        img.onerror = null;
+      };
+
+      img.onerror = () => {
+        // Current extension failed, try the next one
+        extIndex++;
+        img.setAttribute('data-ext-index', extIndex);
+        loadPhoto(img); // Retry
+      };
+
+      img.src = photoPath;
+    };
+
+    // Use IntersectionObserver to only load images when they enter the viewport
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          loadPhoto(img);
+          observer.unobserve(img); // Stop observing once loaded
+        }
+      });
+    }, {
+      rootMargin: '200px 0px', // Load slightly before it comes into view
+      threshold: 0.01
+    });
+
+    // Start observing
+    images.forEach(img => imageObserver.observe(img));
   </script>
 </body>
 
